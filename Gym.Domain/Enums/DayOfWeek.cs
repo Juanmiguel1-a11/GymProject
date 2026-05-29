@@ -9,6 +9,6 @@
         Friday=4,
         Saturday=5,
         Sunday=6,
-        l
+        
     }
 }
