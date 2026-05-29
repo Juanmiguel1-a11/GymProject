@@ -7,5 +7,6 @@
         public DateTime? UpdatedAt { get; set; }
 
 
+
     }
 }
