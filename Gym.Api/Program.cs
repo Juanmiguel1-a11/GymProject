@@ -15,10 +15,13 @@ builder.Services.AddDbContext<GymDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// ── Controllers & Auth ──
 
-builder.Services.AddCors();
+builder.Services.AddControllers();
+builder.Services.AddAuthorization();
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
-// Swagger / OpenAPI
+// ── Swagger / OpenAPI
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -49,6 +52,14 @@ builder.Services.AddCors(options =>
         });
 });
 var app = builder.Build();
+
+// ── Data Seeder ── 
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<GymDbContext>();
+    await context.Database.MigrateAsync();
+    await DataSeeder.SeedAsync(context);
+}
 
 app.UseCors();
 

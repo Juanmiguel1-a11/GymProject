@@ -14,8 +14,19 @@ public static class DataSeeder
 {
     public static async Task SeedAsync(GymDbContext context)
     {
-        // Solo ejecutar si no hay entrenadores (BD vacía)
-        if (await context.Trainers.AnyAsync()) return;
+        // Solo ejecutar si no hay inscripciones (Enrollments)
+        if (await context.Enrollments.AnyAsync()) return;
+
+        // Si ya hay entrenadores (por ejemplo de una corrida anterior que falló a medias), limpiamos la BD
+        if (await context.Trainers.AnyAsync())
+        {
+            context.Enrollments.RemoveRange(context.Enrollments);
+            context.Memberships.RemoveRange(context.Memberships);
+            context.GymClasses.RemoveRange(context.GymClasses);
+            context.Members.RemoveRange(context.Members);
+            context.Trainers.RemoveRange(context.Trainers);
+            await context.SaveChangesAsync();
+        }
 
         var now = DateTime.UtcNow;
 
