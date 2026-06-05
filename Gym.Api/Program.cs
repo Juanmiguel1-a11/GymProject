@@ -4,24 +4,20 @@ using Gym.DataAccess.Repositories;
 using Gym.Domain.Interfaces.Repositories;
 using Gym.Domain.Interfaces.Services;
 using Gym.Domain.Services;
+using Gym.DataAccess.Seeders;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add DbContext
+
+// ── Entity Framework Core ──
+
 builder.Services.AddDbContext<GymDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Add services to the container.
-builder.Services.AddControllers();
 
-// Swagger / OpenAPI
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// ── Repositories ──
 
-// AutoMapper
-builder.Services.AddAutoMapper(typeof(Program));
-
-// Repositories
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IMemberRepository, MemberRepository>();
 builder.Services.AddScoped<IGymClassRepository, GymClassRepository>();
@@ -29,33 +25,63 @@ builder.Services.AddScoped<ITrainerRepository, TrainerRepository>();
 builder.Services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
 builder.Services.AddScoped<IMembershipRepository, MembershipRepository>();
 
-// Services
+
+// ── Services ──
+
 builder.Services.AddScoped<IMemberService, MemberService>();
 builder.Services.AddScoped<IGymClassService, GymClassService>();
 builder.Services.AddScoped<ITrainerService, TrainerService>();
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
 builder.Services.AddScoped<IMembershipService, MembershipService>();
 
+
+// ── AutoMapper ──
+
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
+
+
+// ── Controllers ──
+
+builder.Services.AddControllers();
+
+// ── Swagger ──
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngular", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// ── Data Seeder ── 
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider
+        .GetRequiredService<GymDbContext>();
+
+    await context.Database.MigrateAsync(); // Crea la BD + aplica migraciones 
+    await DataSeeder.SeedAsync(context);
+}
+
+// ── Middleware Pipeline ──
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-}
 
+}
+app.MapGet("/", () => Results.Redirect("/swagger"));
 app.UseHttpsRedirection();
-
+app.UseCors("AllowAngular");
 app.UseAuthorization();
-
 app.MapControllers();
-
-// Seed Data on startup
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<GymDbContext>();
-    context.Database.EnsureCreated();
-}
-
 app.Run();

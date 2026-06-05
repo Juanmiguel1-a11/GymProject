@@ -84,9 +84,6 @@ namespace Gym.DataAccess.Context
                 entity.HasKey(m => m.Id);
                 entity.Property(m => m.Price).HasColumnType("decimal(18,2)");
             });
-
-            // Call Seeder
-            modelBuilder.SeedData();
         }
     }
 }
