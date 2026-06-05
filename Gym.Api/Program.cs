@@ -16,7 +16,11 @@ builder.Services.AddDbContext<GymDbContext>(options =>
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
-// ── Repositories ──
+builder.Services.AddCors();
+
+// Swagger / OpenAPI
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IMemberRepository, MemberRepository>();
@@ -34,45 +38,21 @@ builder.Services.AddScoped<ITrainerService, TrainerService>();
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
 builder.Services.AddScoped<IMembershipService, MembershipService>();
 
-
-// ── AutoMapper ──
-
-builder.Services.AddAutoMapper(typeof(Program).Assembly);
-
-
-// ── Controllers ──
-
-builder.Services.AddControllers();
-
-// ── Swagger ──
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAngular", policy =>
-    {
-        policy.WithOrigins("http://localhost:4200")
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        });
 });
-
-
 var app = builder.Build();
 
-// ── Data Seeder ── 
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider
-        .GetRequiredService<GymDbContext>();
+app.UseCors();
 
-    await context.Database.MigrateAsync(); // Crea la BD + aplica migraciones 
-    await DataSeeder.SeedAsync(context);
-}
-
-// ── Middleware Pipeline ──
-
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -81,7 +61,9 @@ if (app.Environment.IsDevelopment())
 }
 app.MapGet("/", () => Results.Redirect("/swagger"));
 app.UseHttpsRedirection();
-app.UseCors("AllowAngular");
+
+app.UseCors("AllowFrontend");
+
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
