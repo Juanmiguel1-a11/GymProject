@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gym Management System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --black: #0a0a0a;
+            --white: #f8f5f0;
+            --accent: #d4ff00;
+            --accent-dim: #b8e000;
+            --gray: #1c1c1c;
+            --gray-mid: #2e2e2e;
+            --gray-light: #3d3d3d;
+            --text-muted: #888;
+            --red: #ff4545;
+            --green: #00e676;
+            --radius: 4px;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--black);
+            color: var(--white);
+            min-height: 100vh;
+        }
+
+        header {
+            background: var(--gray);
+            border-bottom: 1px solid var(--gray-light);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8rem;
+            letter-spacing: 2px;
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        .api-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            transition: background 0.3s;
+        }
+
+        .status-dot.connected { background: var(--green); }
+        .status-dot.error { background: var(--red); }
+
+        nav {
+            background: var(--gray);
+            border-bottom: 1px solid var(--gray-light);
+            padding: 0 2rem;
+            display: flex;
+            gap: 0;
+        }
+
+        .nav-tab {
+            padding: 14px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+
+        .nav-tab:hover { color: var(--white); }
+        .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+        .main {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .section { display: none; }
+        .section.active { display: block; }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            letter-spacing: 2px;
+            color: var(--white);
+        }
+
+        .section-title span { color: var(--accent); }
+
+        /* Cards */
+        .card {
+            background: var(--gray);
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-bottom: 1.2rem;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--gray-mid);
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius);
+            padding: 1.2rem;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.2rem;
+            letter-spacing: 1px;
+            color: var(--accent);
+        }
+
+        /* Form */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.full { grid-column: 1 / -1; }
+
+        label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+        }
+
+        input, select {
+            background: var(--gray-mid);
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius);
+            color: var(--white);
+            padding: 10px 12px;
+            font-size: 14px;
+            font-family: 'DM Sans', sans-serif;
+            transition: border-color 0.2s;
+            width: 100%;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        input::placeholder { color: var(--text-muted); }
+
+        select option { background: var(--gray-mid); }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.15s;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--black);
+        }
+
+        .btn-primary:hover { background: var(--accent-dim); transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--white);
+            border: 1px solid var(--gray-light);
+        }
+
+        .btn-ghost:hover { border-color: var(--white); }
+
+        .btn-danger {
+            background: transparent;
+            color: var(--red);
+            border: 1px solid var(--red);
+            padding: 5px 10px;
+            font-size: 11px;
+        }
+
+        .btn-danger:hover { background: var(--red); color: var(--white); }
+
+        /* Table */
+        .table-wrap {
+            overflow-x: auto;
+            border-radius: var(--radius);
+            border: 1px solid var(--gray-light);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead { background: var(--gray-mid); }
+
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--gray-light);
+        }
+
+        td {
+            padding: 12px 16px;
+            font-size: 14px;
+            border-bottom: 1px solid var(--gray-mid);
+        }
+
+        tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background: var(--gray-mid); }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-basic { background: #1a2a1a; color: #4caf50; }
+        .badge-premium { background: #1a1a2e; color: #7c8cf8; }
+        .badge-vip { background: #2a1a00; color: var(--accent); }
+        .badge-active { background: #0a1f0a; color: var(--green); }
+        .badge-inactive { background: #1f0a0a; color: var(--red); }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 14px 20px;
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 999;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(.175,.885,.32,1.275);
+        }
+
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { background: var(--green); color: var(--black); }
+        .toast.error { background: var(--red); color: var(--white); }
+
+        /* Loading spinner */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--gray-light);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state svg { margin-bottom: 1rem; opacity: 0.3; }
+
+        .search-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+
+        .search-bar input { flex: 1; }
+
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            header { padding: 0 1rem; }
+            nav { padding: 0 1rem; overflow-x: auto; }
+            .main { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">GYM<span>PRO</span></div>
+    <div class="api-status">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Verificando API...</span>
+    </div>
+</header>
+
+<nav>
+    <div class="nav-tab active" data-tab="dashboard">Inicio</div>
+    <div class="nav-tab" data-tab="members">Miembros</div>
+    <div class="nav-tab" data-tab="register">Registrar</div>
+</nav>
+
+<div class="main">
+
+    <!-- DASHBOARD -->
+    <div class="section active" id="tab-dashboard">
+        <div class="section-header">
+            <h1 class="section-title">PANEL <span>PRINCIPAL</span></h1>
+            <button class="btn btn-ghost" onclick="loadDashboard()">↻ Actualizar</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Miembros</div>
+                <div class="stat-value" id="statTotal">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Membresía Basic</div>
+                <div class="stat-value" id="statBasic">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Membresía Premium</div>
+                <div class="stat-value" id="statPremium">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Membresía VIP</div>
+                <div class="stat-value" id="statVip">—</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Miembros recientes</div>
+            <div id="recentList">
+                <div class="empty-state">Cargando datos...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MEMBERS LIST -->
+    <div class="section" id="tab-members">
+        <div class="section-header">
+            <h1 class="section-title">LISTA DE <span>MIEMBROS</span></h1>
+            <button class="btn btn-primary" onclick="loadMembers()">↻ Recargar</button>
+        </div>
+
+        <div class="card">
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Buscar por nombre o email..." oninput="filterMembers()">
+                <select id="filterType" onchange="filterMembers()">
+                    <option value="">Todos los tipos</option>
+                    <option value="Basic">Basic</option>
+                    <option value="Premium">Premium</option>
+                    <option value="VIP">VIP</option>
+                </select>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Teléfono</th>
+                            <th>Membresía</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="membersTable">
+                        <tr><td colspan="6" class="empty-state">Haz clic en Recargar para ver los miembros</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="section" id="tab-register">
+        <div class="section-header">
+            <h1 class="section-title">REGISTRAR <span>MIEMBRO</span></h1>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Datos del miembro</div>
+            <form id="memberForm" onsubmit="createMember(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="firstName">Nombre</label>
+                        <input type="text" id="firstName" placeholder="Juan" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Apellido</label>
+                        <input type="text" id="lastName" placeholder="Pérez" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Correo electrónico</label>
+                        <input type="email" id="email" placeholder="juan@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Teléfono</label>
+                        <input type="tel" id="phone" placeholder="+57 300 000 0000" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dateOfBirth">Fecha de nacimiento</label>
+                        <input type="date" id="dateOfBirth" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="membershipType">Tipo de membresía</label>
+                        <select id="membershipType">
+                            <option value="0">Basic</option>
+                            <option value="1">Premium</option>
+                            <option value="2">VIP</option>
+                        </select>
+                    </div>
+                    <div class="form-group full" style="margin-top: 0.5rem;">
+                        <button type="submit" class="btn btn-primary" id="submitBtn" style="width: 100%; padding: 14px;">
+                            REGISTRAR MIEMBRO
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+
+<div class="toast" id="toast"></div>
+
+<script>
+    
+    const API_URL = "https://localhost:7154/api";
+
+    let allMembers = [];
+
+    // --- NAVIGATION ---
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+            if (tab.dataset.tab === 'members') loadMembers();
+            if (tab.dataset.tab === 'dashboard') loadDashboard();
+        });
+    });
+
+    // --- API STATUS CHECK ---
+    async function checkApiStatus() {
+        const dot = document.getElementById('statusDot');
+        const text = document.getElementById('statusText');
+        try {
+            const res = await fetch(`${API_URL}/Members`, { signal: AbortSignal.timeout(4000) });
+            if (res.ok) {
+                dot.className = 'status-dot connected';
+                text.textContent = 'API conectada';
+            } else {
+                throw new Error();
+            }
+        } catch {
+            dot.className = 'status-dot error';
+            text.textContent = 'API no disponible';
+        }
+    }
+
+    // --- TOAST ---
+    function showToast(msg, type = 'success') {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = `toast ${type} show`;
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // --- MEMBERSHIP LABELS ---
+    function membershipLabel(val) {
+        const map = { 0: 'Basic', 1: 'Premium', 2: 'VIP', 'Basic': 'Basic', 'Premium': 'Premium', 'VIP': 'VIP' };
+        return map[val] ?? val;
+    }
+
+    function membershipBadge(val) {
+        const label = membershipLabel(val);
+        const cls = { Basic: 'badge-basic', Premium: 'badge-premium', VIP: 'badge-vip' }[label] ?? '';
+        return `<span class="badge ${cls}">${label}</span>`;
+    }
+
+    // --- LOAD MEMBERS ---
+    async function loadMembers() {
+        const tbody = document.getElementById('membersTable');
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;"><div class="spinner"></div></td></tr>';
+        try {
+            const res = await fetch(`${API_URL}/Members`);
+            if (!res.ok) throw new Error('Error ' + res.status);
+            allMembers = await res.json();
+            renderMembersTable(allMembers);
+        } catch (e) {
+            tbody.innerHTML = `<tr><td colspan="6" class="empty-state" style="color:#ff4545;">
+                No se pudo conectar al backend. Verifica que Visual Studio esté corriendo y el puerto sea correcto.
+            </td></tr>`;
+        }
+    }
+
+    function renderMembersTable(members) {
+        const tbody = document.getElementById('membersTable');
+        if (!members.length) {
+            tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No hay miembros registrados</td></tr>';
+            return;
+        }
+        tbody.innerHTML = members.map(m => `
+            <tr>
+                <td style="color:var(--text-muted);font-size:12px;">#${m.id}</td>
+                <td style="font-weight:500;">${m.firstName} ${m.lastName}</td>
+                <td style="color:var(--text-muted);font-size:13px;">${m.email}</td>
+                <td style="font-size:13px;">${m.phone ?? '—'}</td>
+                <td>${membershipBadge(m.membershipType)}</td>
+                <td>
+                    <button class="btn btn-danger" onclick="deleteMember(${m.id})">Eliminar</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function filterMembers() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const type = document.getElementById('filterType').value;
+        const filtered = allMembers.filter(m => {
+            const nameMatch = `${m.firstName} ${m.lastName} ${m.email}`.toLowerCase().includes(search);
+            const typeMatch = !type || membershipLabel(m.membershipType) === type;
+            return nameMatch && typeMatch;
+        });
+        renderMembersTable(filtered);
+    }
+
+    // --- CREATE MEMBER ---
+    async function createMember(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        btn.textContent = 'REGISTRANDO...';
+        btn.disabled = true;
+
+        const member = {
+            firstName: document.getElementById('firstName').value,
+            lastName: document.getElementById('lastName').value,
+            email: document.getElementById('email').value,
+            phone: document.getElementById('phone').value,
+            dateOfBirth: document.getElementById('dateOfBirth').value,
+            membershipType: parseInt(document.getElementById('membershipType').value)
+        };
+
+        try {
+            const res = await fetch(`${API_URL}/Members`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(member)
+            });
+
+            if (res.ok || res.status === 201) {
+                showToast('✓ Miembro registrado correctamente', 'success');
+                document.getElementById('memberForm').reset();
+                loadDashboard();
+            } else {
+                const err = await res.text();
+                showToast('Error: ' + err, 'error');
+            }
+        } catch {
+            showToast('No se pudo conectar al backend', 'error');
+        } finally {
+            btn.textContent = 'REGISTRAR MIEMBRO';
+            btn.disabled = false;
+        }
+    }
+
+    // --- DELETE MEMBER ---
+    async function deleteMember(id) {
+        if (!confirm(`¿Eliminar miembro #${id}?`)) return;
+        try {
+            const res = await fetch(`${API_URL}/Members/${id}`, { method: 'DELETE' });
+            if (res.ok || res.status === 204) {
+                showToast('Miembro eliminado', 'success');
+                loadMembers();
+            } else {
+                showToast('Error al eliminar', 'error');
+            }
+        } catch {
+            showToast('No se pudo conectar al backend', 'error');
+        }
+    }
+
+    // --- DASHBOARD ---
+    async function loadDashboard() {
+        try {
+            const res = await fetch(`${API_URL}/Members`);
+            if (!res.ok) throw new Error();
+            const members = await res.json();
+
+            document.getElementById('statTotal').textContent = members.length;
+            document.getElementById('statBasic').textContent = members.filter(m => membershipLabel(m.membershipType) === 'Basic').length;
+            document.getElementById('statPremium').textContent = members.filter(m => membershipLabel(m.membershipType) === 'Premium').length;
+            document.getElementById('statVip').textContent = members.filter(m => membershipLabel(m.membershipType) === 'VIP').length;
+
+            const recent = members.slice(-5).reverse();
+            const recentList = document.getElementById('recentList');
+            if (!recent.length) {
+                recentList.innerHTML = '<div class="empty-state">Sin miembros aún</div>';
+                return;
+            }
+            recentList.innerHTML = `
+                <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Nombre</th><th>Email</th><th>Membresía</th></tr></thead>
+                    <tbody>
+                    ${recent.map(m => `
+                        <tr>
+                            <td style="font-weight:500;">${m.firstName} ${m.lastName}</td>
+                            <td style="font-size:13px;color:var(--text-muted);">${m.email}</td>
+                            <td>${membershipBadge(m.membershipType)}</td>
+                        </tr>
+                    `).join('')}
+                    </tbody>
+                </table>
+                </div>
+            `;
+        } catch {
+            document.getElementById('recentList').innerHTML = '<div class="empty-state" style="color:var(--red);">Backend no disponible</div>';
+            ['statTotal','statBasic','statPremium','statVip'].forEach(id => document.getElementById(id).textContent = '—');
+        }
+    }
+
+    // Init
+    checkApiStatus();
+    loadDashboard();
+    setInterval(checkApiStatus, 30000);
+</script>
+</body>
+</html>
